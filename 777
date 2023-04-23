@@ -1,0 +1,54 @@
+import requests
+from bs4 import BeautifulSoup
+import smtplib
+import ssl
+
+# Function to scrape angel investors website and return the HTML content
+def scrape_angel_investors():
+    url = 'https://www.angelinvestors.com/'
+    response = requests.get(url)
+    return response.content
+
+# Function to extract the number of active investors from the HTML content using BeautifulSoup
+def extract_active_investors(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+    investors_div = soup.find('div', {'class': 'counter-value text-white font-weight-bold'})
+    investors_count = int(investors_div.text.replace(',', ''))
+    return investors_count
+
+# Function to send email notification
+def send_email(investors_count):
+    port = 465  # For SSL
+    smtp_server = "smtp.gmail.com"
+    sender_email = "youremail@gmail.com"  # Enter your address
+    receiver_email = "receiveremail@gmail.com"  # Enter receiver address
+    password = input("Type your password and press enter: ")
+    message = f"""\
+    Subject: Angel Investors Update
+
+    The number of active investors on Angel Investors website has increased to {investors_count}."""
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, message)
+
+# Main function to run the program
+def main():
+    # Scrape the angel investors website
+    html_content = scrape_angel_investors()
+
+    # Extract the number of active investors from the scraped content
+    investors_count = extract_active_investors(html_content)
+
+    # Print the number of active investors
+    print(f"The number of active investors on Angel Investors website is {investors_count}")
+
+    # Check if the number of active investors has increased
+    if investors_count > 100000:
+        # Send email notification if the number of active investors has increased
+        send_email(investors_count)
+        print("Email notification sent!")
+
+if __name__ == '__main__':
+    main()
